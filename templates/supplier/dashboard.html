@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Supplier Dashboard | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Supplier Workspace</span>
+                <h1 class="fw-bold mb-1">Manage your product pipeline and stock readiness</h1>
+                <p class="text-muted mb-0">Add new accessory listings, keep stock levels current, and track incoming orders tied to your catalog.</p>
+            </div>
+            <a href="{{ url_for('supplier.products') }}" class="btn btn-dark rounded-pill px-4">Manage products</a>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-6 col-xl-3"><div class="stat-card"><span>Your Products</span><strong>{{ stats.total_products or 0 }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card warm"><span>Low Stock Items</span><strong>{{ stats.low_stock_count or 0 }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card"><span>Assigned Orders</span><strong>{{ stats.assigned_orders or 0 }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card teal"><span>Gross Sales</span><strong>{{ stats.gross_sales|currency }}</strong></div></div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-6">
+                <div class="dashboard-panel h-100">
+                    <div class="panel-header">
+                        <h4>Latest products</h4>
+                        <a href="{{ url_for('supplier.products') }}">Edit stock</a>
+                    </div>
+                    <div class="stack-list">
+                        {% for product in latest_products %}
+                            <div class="mini-product">
+                                <img src="{{ product.image }}" alt="{{ product.product_name }}">
+                                <div>
+                                    <strong>{{ product.product_name }}</strong>
+                                    <p class="mb-1 text-muted">{{ product.brand }}</p>
+                                    <span>{{ product.stock_quantity }} units • {{ product.price|currency }}</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No products added yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="dashboard-panel h-100">
+                    <div class="panel-header">
+                        <h4>Recent assigned orders</h4>
+                        <a href="{{ url_for('supplier.orders') }}">Open order view</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr><th>Order</th><th>Customer</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for order in latest_orders %}
+                                    <tr>
+                                        <td>#{{ order.order_id }}</td>
+                                        <td>{{ order.customer_name }}</td>
+                                        <td><span class="status-pill">{{ order.order_status }}</span></td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="3" class="text-center text-muted py-4">No supplier-linked orders yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Configuration Needed | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="empty-state large">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h2>Runtime setup required</h2>
+            <p>{{ error_message }}</p>
+            <p class="mb-0">Install the dependencies, configure MySQL credentials, import `database.sql`, and run the Flask server again.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Your Cart | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Shopping Cart</span>
+                <h1 class="fw-bold mb-1">Review your selected accessories</h1>
+                <p class="text-muted mb-0">Update quantities, remove items, and continue to the checkout page.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-8">
+                <div class="dashboard-panel">
+                    {% if cart_items %}
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                        <tr>
+                                            <td>
+                                                <div class="mini-product">
+                                                    <img src="{{ item.image }}" alt="{{ item.product_name }}">
+                                                    <div>
+                                                        <strong>{{ item.product_name }}</strong>
+                                                        <p class="mb-0 text-muted">{{ item.brand }}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <form method="post" action="{{ url_for('customer.update_cart', cart_id=item.cart_id) }}" class="d-flex gap-2">
+                                                    <input type="number" name="quantity" min="1" max="{{ item.stock_quantity }}" value="{{ item.quantity }}" class="form-control form-control-sm">
+                                                    <button class="btn btn-sm btn-outline-dark">Update</button>
+                                                </form>
+                                            </td>
+                                            <td>{{ item.price|currency }}</td>
+                                            <td>{{ (item.price * item.quantity)|currency }}</td>
+                                            <td>
+                                                <form method="post" action="{{ url_for('customer.remove_cart_item', cart_id=item.cart_id) }}">
+                                                    <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <h4>Your cart is empty</h4>
+                            <p>Explore the catalog and add a few accessories to get started.</p>
+                            <a href="{{ url_for('public.products') }}" class="btn btn-dark rounded-pill px-4">Go to catalog</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-panel">
+                    <h4>Order summary</h4>
+                    <div class="summary-row"><span>Total Items</span><strong>{{ totals.total_items }}</strong></div>
+                    <div class="summary-row"><span>Subtotal</span><strong>{{ totals.subtotal|currency }}</strong></div>
+                    <div class="summary-row"><span>Delivery</span><strong>Free</strong></div>
+                    <hr>
+                    <div class="summary-row total"><span>Payable now</span><strong>{{ totals.subtotal|currency }}</strong></div>
+                    <a href="{{ url_for('customer.checkout') }}" class="btn btn-warning w-100 rounded-pill mt-3 {% if not cart_items %}disabled{% endif %}">Proceed to checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

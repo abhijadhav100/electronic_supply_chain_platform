@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Order Reports | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Order Reports</span>
+                <h1 class="fw-bold mb-1">Track sales activity and fulfillment health</h1>
+                <p class="text-muted mb-0">Review order volume, processing load, and revenue from the full platform pipeline.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-6 col-xl-3"><div class="stat-card"><span>Total Orders</span><strong>{{ report.total_orders or 0 }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card teal"><span>Total Revenue</span><strong>{{ report.total_revenue|currency }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card warm"><span>Delivered</span><strong>{{ report.delivered_orders or 0 }}</strong></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card"><span>Processing</span><strong>{{ report.processing_orders or 0 }}</strong></div></div>
+        </div>
+        <div class="dashboard-panel mt-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th><th>Shipping</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.order_id }}<small class="text-muted d-block">{{ order.order_date.strftime('%d %b %Y') if order.order_date else '' }}</small></td>
+                                <td><strong>{{ order.customer_name }}</strong><small class="text-muted d-block">{{ order.customer_email }}</small></td>
+                                <td><span class="status-pill">{{ order.order_status }}</span></td>
+                                <td>{{ order.total_amount|currency }}</td>
+                                <td class="text-muted">{{ order.shipping_address }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Orders | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Order Tracking</span>
+                <h1 class="fw-bold mb-1">Stay updated on every purchase</h1>
+                <p class="text-muted mb-0">Review order status, payment status, shipping details, and included accessories in one place.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            {% for order in orders %}
+                <div class="col-12">
+                    <div class="dashboard-panel">
+                        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+                            <div>
+                                <h4 class="mb-1">Order #{{ order.order_id }}</h4>
+                                <p class="text-muted mb-2">{{ order.order_date.strftime('%d %b %Y, %I:%M %p') if order.order_date else '' }}</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="status-pill">{{ order.order_status }}</span>
+                                    <span class="status-pill subtle">{{ order.payment_status or 'Pending' }} • {{ order.payment_method or 'Not assigned' }}</span>
+                                </div>
+                            </div>
+                            <div class="text-md-end">
+                                <strong class="price-tag d-block">{{ order.total_amount|currency }}</strong>
+                                <small class="text-muted">{{ order.shipping_address }}</small>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            {% for item in grouped_items.get(order.order_id, []) %}
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="line-item-card">
+                                        <img src="{{ item.image }}" alt="{{ item.product_name }}">
+                                        <div>
+                                            <strong>{{ item.product_name }}</strong>
+                                            <p class="text-muted mb-1">{{ item.brand }}</p>
+                                            <span>{{ item.quantity }} × {{ item.price|currency }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-box-open"></i>
+                        <h4>No orders yet</h4>
+                        <p>Once you place an order, it will appear here with payment and tracking updates.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

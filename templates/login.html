@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Login | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="auth-shell">
+                    <div class="row g-0">
+                        <div class="col-lg-5 auth-panel d-flex flex-column justify-content-between">
+                            <div>
+                                <span class="eyebrow-chip">Secure Login</span>
+                                <h2 class="fw-bold mt-3">Enter your role-based workspace.</h2>
+                                <p class="text-white-50">Switch between admin controls, supplier operations, and customer shopping with a single clean login flow.</p>
+                            </div>
+                            <div class="auth-info-list">
+                                <div><i class="fa-solid fa-user-shield"></i> Protected session management</div>
+                                <div><i class="fa-solid fa-store"></i> Supplier inventory controls</div>
+                                <div><i class="fa-solid fa-bag-shopping"></i> Customer cart and checkout</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 bg-white p-4 p-lg-5">
+                            <h3 class="fw-bold mb-1">Sign in</h3>
+                            <p class="text-muted mb-4">Use the demo accounts from the README or your registered account.</p>
+                            <form method="post" class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Email address</label>
+                                    <input type="email" name="email" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Login as</label>
+                                    <select name="role" class="form-select form-select-lg" required>
+                                        <option value="customer">Customer</option>
+                                        <option value="supplier">Supplier</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-dark btn-lg rounded-pill px-4">Login</button>
+                                    <a href="{{ url_for('auth.register') }}" class="btn btn-link text-decoration-none">Create account</a>
+                                </div>
+                            </form>
+                            <div class="demo-box mt-4">
+                                <!--<strong>Demo accounts</strong>
+                                <p class="mb-1">Admin: `admin@electrohub.com` / `admin123`</p>
+                                <p class="mb-1">Supplier: `supplier@electrohub.com` / `supplier123`</p>
+                                <p class="mb-0">Customer: `customer@electrohub.com` / `customer123`</p>-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

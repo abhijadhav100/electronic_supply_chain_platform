@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Users | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">User Directory</span>
+                <h1 class="fw-bold mb-1">View all registered platform accounts</h1>
+                <p class="text-muted mb-0">Keep visibility into customer, supplier, and admin records across the system.</p>
+            </div>
+        </div>
+        <div class="dashboard-panel mt-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+    <td>
+        <strong>{{ user.name }}</strong>
+        <small class="text-muted d-block">{{ user.address }}</small>
+    </td>
+
+    <td>{{ user.email }}</td>
+    <td>{{ user.phone }}</td>
+
+    <td>
+        <span class="status-pill">{{ user.role|title }}</span>
+    </td>
+
+    <td>
+        {{ user.created_at.strftime('%d %b %Y') if user.created_at else '' }}
+    </td>
+
+    <!-- ✅ ACTION COLUMN -->
+    <td class="d-flex gap-2">
+
+        <!-- 👁 VIEW -->
+        <a href="{{ url_for('admin.user_details', user_id=user.user_id) }}"
+           class="btn btn-sm btn-info rounded-pill px-3">
+           View
+        </a>
+
+        <!-- ✏️ EDIT -->
+        <a href="{{ url_for('admin.update_user', user_id=user.user_id) }}"
+           class="btn btn-sm btn-warning rounded-pill px-3">
+           Edit
+        </a>
+
+        <!-- 🗑 DELETE -->
+        <form action="{{ url_for('admin.delete_user', user_id=user.user_id) }}"
+              method="POST">
+            <button class="btn btn-sm btn-danger rounded-pill px-3"
+                    onclick="return confirm('Delete this user?')">
+                Delete
+            </button>
+        </form>
+
+    </td>
+</tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

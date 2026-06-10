@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}ElectroHub | Electronic Accessories Platform{% endblock %}
+{% block content %}
+<section class="hero-section">
+    <div class="container py-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="eyebrow-chip">Electronic Accessories Supply Chain</span>
+                <h1 class="display-5 fw-bold mt-3">Manage sourcing, stock, orders, and sales from one streamlined platform.</h1>
+                <p class="lead text-muted mt-3">ElectroHub gives admins, suppliers, and customers a clean digital workflow for catalog management, inventory visibility, cart checkout, and order tracking.</p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a href="{{ url_for('public.products') }}" class="btn btn-warning btn-lg rounded-pill px-4">Explore Products</a>
+                    {% if session.get('user_id') %}
+                        <a href="{{ url_for(dashboard_endpoint) }}" class="btn btn-outline-light btn-lg rounded-pill px-4">Open Dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">Login to Continue</a>
+                    {% endif %}
+                </div>
+                <div class="hero-trust mt-4">
+                    <div><i class="fa-solid fa-boxes-stacked"></i> Inventory Control</div>
+                    <div><i class="fa-solid fa-truck-fast"></i> Faster Fulfillment</div>
+                    <div><i class="fa-solid fa-chart-line"></i> Sales Insights</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-card-grid">
+                    <div class="glass-stat-card">
+                        <span>Live Modules</span>
+                        <strong>Catalog + Orders + Payments</strong>
+                    </div>
+                    <div class="glass-stat-card accent">
+                        <span>Role Access</span>
+                        <strong>Admin, Supplier, Customer</strong>
+                    </div>
+                    <div class="hero-showcase">
+                        <div class="showcase-card">
+                            <i class="fa-solid fa-laptop"></i>
+                            <h5>Smart catalog</h5>
+                            <p>Card-based product browsing with clean filters and responsive layouts.</p>
+                        </div>
+                        <div class="showcase-card">
+                            <i class="fa-solid fa-warehouse"></i>
+                            <h5>Inventory sync</h5>
+                            <p>Track stock, warehouse locations, and supplier-side updates in one place.</p>
+                        </div>
+                        <div class="showcase-card">
+                            <i class="fa-solid fa-credit-card"></i>
+                            <h5>Checkout flow</h5>
+                            <p>Simulated payments and order history for a full customer journey.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Popular categories</span>
+                <h2 class="fw-bold mb-0">Built for fast-moving accessories commerce</h2>
+            </div>
+        </div>
+        <div class="row g-4 mt-1">
+            {% for category in categories %}
+                <div class="col-md-6 col-xl-3">
+                    <div class="feature-panel h-100">
+                        <div class="feature-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <h5>{{ category.category_name }}</h5>
+                        <p>{{ category.description }}</p>
+                        <span class="chip-muted">{{ category.product_count }} listed products</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Featured products</span>
+                <h2 class="fw-bold mb-0">Top electronic accessories in the catalog</h2>
+            </div>
+            <a href="{{ url_for('public.products') }}" class="btn btn-outline-dark rounded-pill">View full catalog</a>
+        </div>
+        <div class="row g-4 mt-1">
+            {% for product in featured_products %}
+                <div class="col-sm-6 col-xl-3">
+                    <div class="product-card h-100">
+                        <div class="product-image-wrap">
+                            <img src="{{ product.image }}" alt="{{ product.product_name }}" class="img-fluid">
+                        </div>
+                        <div class="card-body p-4">
+                            <span class="product-category">{{ product.category_name }}</span>
+                            <h5 class="mt-2">{{ product.product_name }}</h5>
+                            <p class="text-muted small mb-3">{{ product.brand }} by {{ product.supplier_name }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="price-tag">{{ product.price|currency }}</strong>
+                                <span class="stock-tag">{{ product.stock_quantity }} in stock</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

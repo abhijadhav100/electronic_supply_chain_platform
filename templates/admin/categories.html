@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage Categories | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Category Management</span>
+                <h1 class="fw-bold mb-1">Organize the catalog for easier discovery</h1>
+                <p class="text-muted mb-0">Create structured categories and keep product grouping clean across the storefront and dashboards.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-4">
+                <div class="dashboard-panel">
+                    <h4 class="mb-3">{% if edit_category %}Update category{% else %}Add category{% endif %}</h4>
+                    <form method="post" action="{% if edit_category %}{{ url_for('admin.update_category', category_id=edit_category.category_id) }}{% else %}{{ url_for('admin.categories') }}{% endif %}" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Category name</label>
+                            <input type="text" name="category_name" class="form-control" value="{{ edit_category.category_name if edit_category else '' }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" rows="4" class="form-control" required>{{ edit_category.description if edit_category else '' }}</textarea>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button class="btn btn-dark rounded-pill px-4">{% if edit_category %}Save changes{% else %}Create category{% endif %}</button>
+                            {% if edit_category %}
+                                <a href="{{ url_for('admin.categories') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="dashboard-panel">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr><th>Name</th><th>Description</th><th>Products</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                    <tr>
+                                        <td><strong>{{ category.category_name }}</strong></td>
+                                        <td class="text-muted">{{ category.description }}</td>
+                                        <td>{{ category.product_count }}</td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('admin.categories', edit=category.category_id) }}" class="btn btn-sm btn-outline-dark">Edit</a>
+                                            <form method="post" action="{{ url_for('admin.delete_category', category_id=category.category_id) }}" class="d-inline">
+                                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

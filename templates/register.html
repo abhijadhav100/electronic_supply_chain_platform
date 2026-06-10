@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Register | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="auth-shell">
+                    <div class="row g-0">
+                        <div class="col-lg-5 auth-panel auth-panel-secondary d-flex flex-column justify-content-between">
+                            <div>
+                                <span class="eyebrow-chip">Create Account</span>
+                                <h2 class="fw-bold mt-3">Join the platform as a customer or supplier.</h2>
+                                <p class="text-white-50">Customers can shop and track orders. Suppliers can add products, manage stock, and monitor assigned sales.</p>
+                            </div>
+                            <div class="auth-info-list">
+                                <div><i class="fa-solid fa-user-plus"></i> Fast registration workflow</div>
+                                <div><i class="fa-solid fa-box-open"></i> Add products after supplier signup</div>
+                                <div><i class="fa-solid fa-mobile-screen-button"></i> Fully responsive forms</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 bg-white p-4 p-lg-5">
+                            <h3 class="fw-bold mb-1">Register</h3>
+                            <p class="text-muted mb-4">Create your account and continue to the role-specific dashboard.</p>
+                            <form method="post" class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Full name</label>
+                                    <input type="text" name="name" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" name="phone" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Register as</label>
+                                    <select name="role" class="form-select" required>
+                                        <option value="customer">Customer</option>
+                                        <option value="supplier">Supplier</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Confirm password</label>
+                                    <input type="password" name="confirm_password" class="form-control" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <textarea name="address" class="form-control" rows="3" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-warning btn-lg rounded-pill px-4">Create account</button>
+                                    <a href="{{ url_for('auth.login') }}" class="btn btn-link text-decoration-none">Already have an account?</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

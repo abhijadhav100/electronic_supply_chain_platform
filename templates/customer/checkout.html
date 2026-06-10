@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Checkout | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Checkout</span>
+                <h1 class="fw-bold mb-1">Confirm shipping and simulate payment</h1>
+                <p class="text-muted mb-0">This checkout flow creates the order, items, payment record, and stock updates.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-7">
+                <div class="dashboard-panel">
+                    <form method="post" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Customer name</label>
+                            <input type="text" class="form-control" value="{{ user.name }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment method</label>
+                            <select name="payment_method" class="form-select" required>
+                                <option value="">Select method</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="Cash on Delivery">Cash on Delivery</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Shipping address</label>
+                            <textarea name="shipping_address" rows="4" class="form-control" required>{{ user.address }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-dark btn-lg rounded-pill px-4">Place order and pay</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="dashboard-panel">
+                    <h4 class="mb-3">Order items</h4>
+                    <div class="stack-list">
+                        {% for item in cart_items %}
+                            <div class="summary-row">
+                                <span>{{ item.product_name }} × {{ item.quantity }}</span>
+                                <strong>{{ (item.price * item.quantity)|currency }}</strong>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <div class="summary-row total">
+                        <span>Total payable</span>
+                        <strong>{{ subtotal|currency }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

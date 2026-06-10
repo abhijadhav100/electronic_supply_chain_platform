@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Supplier Orders | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Assigned Orders</span>
+                <h1 class="fw-bold mb-1">Review products sold from your catalog</h1>
+                <p class="text-muted mb-0">See which customer orders contain your items and how much quantity moved through the platform.</p>
+            </div>
+        </div>
+        <div class="dashboard-panel mt-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr><th>Order</th><th>Customer</th><th>Product</th><th>Qty</th><th>Line Value</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.order_id }}<small class="text-muted d-block">{{ order.order_date.strftime('%d %b %Y') if order.order_date else '' }}</small></td>
+                                <td>{{ order.customer_name }}</td>
+                                <td>{{ order.product_name }}</td>
+                                <td>{{ order.quantity }}</td>
+                                <td>{{ (order.quantity * order.price)|currency }}</td>
+                                <td><span class="status-pill">{{ order.order_status }}</span></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">No assigned orders available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

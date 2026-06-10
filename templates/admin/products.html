@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Manage Products | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">Catalog Management</span>
+                <h1 class="fw-bold mb-1">{% if edit_product %}Edit product{% else %}Add and manage products{% endif %}</h1>
+                <p class="text-muted mb-0">Create, update, and delete product entries while keeping inventory linked to warehouse locations.</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-5">
+                <div class="dashboard-panel">
+                    <h4 class="mb-3">{% if edit_product %}Update product #{{ edit_product.product_id }}{% else %}Add new product{% endif %}</h4>
+                    <form method="post" action="{% if edit_product %}{{ url_for('admin.edit_product', product_id=edit_product.product_id) }}{% else %}{{ url_for('admin.add_product') }}{% endif %}" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select name="category_id" class="form-select" required>
+                                {% for category in categories %}
+                                    <option value="{{ category.category_id }}" {% if edit_product and edit_product.category_id == category.category_id %}selected{% endif %}>{{ category.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Supplier</label>
+                            <select name="supplier_id" class="form-select" required>
+                                {% for supplier in suppliers %}
+                                    <option value="{{ supplier.supplier_id }}" {% if edit_product and edit_product.supplier_id == supplier.supplier_id %}selected{% endif %}>{{ supplier.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Product name</label>
+                            <input type="text" name="product_name" class="form-control" value="{{ edit_product.product_name if edit_product else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Brand</label>
+                            <input type="text" name="brand" class="form-control" value="{{ edit_product.brand if edit_product else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Price</label>
+                            <input type="number" step="0.01" name="price" class="form-control" value="{{ edit_product.price if edit_product else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Stock quantity</label>
+                            <input type="number" name="stock_quantity" class="form-control" value="{{ edit_product.stock_quantity if edit_product else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Warehouse location</label>
+                            <input type="text" name="warehouse_location" class="form-control" value="{{ edit_product.warehouse_location if edit_product else '' }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Image path or URL</label>
+                            <input type="text" name="image" class="form-control" value="{{ edit_product.image if edit_product else '/static/images/product-default.svg' }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="4" required>{{ edit_product.description if edit_product else '' }}</textarea>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button class="btn btn-dark rounded-pill px-4">{% if edit_product %}Save changes{% else %}Add product{% endif %}</button>
+                            {% if edit_product %}
+                                <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="dashboard-panel">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr><th>Product</th><th>Supplier</th><th>Stock</th><th>Price</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ product.product_name }}</strong>
+                                            <small class="text-muted d-block">{{ product.brand }} • {{ product.category_name }}</small>
+                                        </td>
+                                        <td>{{ product.supplier_name }}</td>
+                                        <td>{{ product.stock_quantity }}</td>
+                                        <td>{{ product.price|currency }}</td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('admin.edit_product', product_id=product.product_id) }}" class="btn btn-sm btn-outline-dark">Edit</a>
+                                            <form method="post" action="{{ url_for('admin.delete_product', product_id=product.product_id) }}" class="d-inline">
+                                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
