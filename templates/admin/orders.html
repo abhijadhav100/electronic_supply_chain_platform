@@ -32,6 +32,7 @@
                             <th>Total</th>
                             <th>Transaction ID</th>
                             <th>Shipping</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,6 +58,11 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-muted">{{ order.shipping_address }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adminStatusModal" onclick="setAdminStatusForm({{ order.order_id }})">
+                                        <i class="fas fa-edit"></i> Update
+                                    </button>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -114,4 +120,50 @@
 
     </div>
 </section>
+
+<!-- Admin Status Update Modal -->
+<div class="modal fade" id="adminStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="adminStatusForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="adminStatus" class="form-label">New Status</label>
+                        <select class="form-select" id="adminStatus" name="status" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adminNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="adminNotes" name="notes" rows="3" placeholder="Add any notes about this status update..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setAdminStatusForm(orderId) {
+    document.getElementById('adminStatusForm').action = `/admin/orders/${orderId}/update-status`;
+    // Reset form fields
+    document.getElementById('adminStatus').value = '';
+    document.getElementById('adminNotes').value = '';
+}
+</script>
 {% endblock %}

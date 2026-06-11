@@ -151,6 +151,21 @@ CREATE TABLE return_refund (
     CONSTRAINT fk_return_order FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
 
+-- Create order_tracking table for shipment tracking
+CREATE TABLE order_tracking (
+    tracking_id SERIAL PRIMARY KEY,
+    order_id INT NOT NULL,
+    order_item_id INT,
+    status VARCHAR(40) NOT NULL DEFAULT 'Pending',
+    warehouse_location VARCHAR(120),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    updated_by INT NOT NULL,
+    CONSTRAINT fk_tracking_order FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    CONSTRAINT fk_tracking_item FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id),
+    CONSTRAINT fk_tracking_user FOREIGN KEY (updated_by) REFERENCES "user"(user_id)
+);
+
 -- Insert demo data
 INSERT INTO "user" (name, email, phone, password, role, address) VALUES
 ('Platform Admin', 'admin@electrohub.com', '9876500000', 'pbkdf2:sha256:600000$fixedsaltadm$10d45578bd9f25e25473c0bd7404c0573de183945806b74731c95dfeded6f248', 'admin', 'Corporate HQ, Bangalore'),
@@ -198,6 +213,20 @@ INSERT INTO order_items (order_id, product_id, quantity, price) VALUES
 INSERT INTO payment (order_id, payment_method, payment_status, transaction_id) VALUES
 (1, 'UPI', 'Paid', 'TXN-DEMO-001'),
 (2, 'Credit Card', 'Paid', 'TXN-DEMO-002');
+
+INSERT INTO order_tracking (order_id, order_item_id, status, warehouse_location, timestamp, notes, updated_by) VALUES
+(1, 1, 'Pending', 'Pune WH-S1', NOW() - INTERVAL '48 hours', 'Order received and confirmed', 1),
+(1, 1, 'Processing', 'Pune WH-S1', NOW() - INTERVAL '36 hours', 'Product picked and packed', 2),
+(1, 2, 'Processing', 'Pune WH-A5', NOW() - INTERVAL '36 hours', 'Product picked and packed', 2),
+(1, 1, 'Shipped', 'Pune Hub', NOW() - INTERVAL '24 hours', 'Dispatched from warehouse', 2),
+(1, 2, 'Shipped', 'Pune Hub', NOW() - INTERVAL '24 hours', 'Dispatched from warehouse', 2),
+(1, 1, 'In Transit', 'Mumbai Transit Hub', NOW() - INTERVAL '12 hours', 'In transit to destination', 1),
+(1, 2, 'In Transit', 'Mumbai Transit Hub', NOW() - INTERVAL '12 hours', 'In transit to destination', 1),
+(1, 1, 'Out for Delivery', 'Sector 18, Noida', NOW() - INTERVAL '2 hours', 'Out for delivery today', 1),
+(1, 2, 'Out for Delivery', 'Sector 18, Noida', NOW() - INTERVAL '2 hours', 'Out for delivery today', 1),
+(2, 3, 'Pending', 'Bangalore WH-A1', NOW() - INTERVAL '24 hours', 'Order confirmed', 1),
+(2, 3, 'Processing', 'Bangalore WH-A1', NOW() - INTERVAL '12 hours', 'Product picked and packed', 2),
+(2, 3, 'Shipped', 'Bangalore Hub', NOW() - INTERVAL '6 hours', 'Dispatched from warehouse', 2);
 
 INSERT INTO return_refund (order_id, reason, status) VALUES
 (1, 'Requested replacement due to transit damage on speaker grill.', 'Under Review');

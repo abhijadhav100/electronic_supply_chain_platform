@@ -7,14 +7,14 @@
             <div>
                 <span class="section-label">Assigned Orders</span>
                 <h1 class="fw-bold mb-1">Review products sold from your catalog</h1>
-                <p class="text-muted mb-0">See which customer orders contain your items and how much quantity moved through the platform.</p>
+                <p class="text-muted mb-0">See which customer orders contain your items and manage fulfillment status with real-time tracking.</p>
             </div>
         </div>
         <div class="dashboard-panel mt-4">
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
-                        <tr><th>Order</th><th>Customer</th><th>Product</th><th>Qty</th><th>Line Value</th><th>Status</th></tr>
+                        <tr><th>Order</th><th>Customer</th><th>Product</th><th>Qty</th><th>Line Value</th><th>Status</th><th>Action</th></tr>
                     </thead>
                     <tbody>
                         {% for order in orders %}
@@ -25,9 +25,14 @@
                                 <td>{{ order.quantity }}</td>
                                 <td>{{ (order.quantity * order.price)|currency }}</td>
                                 <td><span class="status-pill">{{ order.order_status }}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#statusModal" onclick="setUpdateForm({{ order.order_id }}, {{ order.order_item_id }})">
+                                        <i class="fas fa-edit"></i> Update
+                                    </button>
+                                </td>
                             </tr>
                         {% else %}
-                            <tr><td colspan="6" class="text-center text-muted py-4">No assigned orders available.</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-4">No assigned orders available.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -35,4 +40,50 @@
         </div>
     </div>
 </section>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="statusForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">New Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any notes about this status update..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setUpdateForm(orderId, orderItemId) {
+    document.getElementById('statusForm').action = `/supplier/orders/${orderId}/items/${orderItemId}/update-status`;
+    // Reset form fields
+    document.getElementById('status').value = '';
+    document.getElementById('notes').value = '';
+}
+</script>
 {% endblock %}

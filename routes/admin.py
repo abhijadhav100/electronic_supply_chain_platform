@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from db import execute_query, fetch_all, fetch_one
 from decorators import roles_required
@@ -269,3 +269,58 @@ def delete_user(user_id):
     execute_query('DELETE FROM "user" WHERE user_id = %s', (user_id,))
     flash("User deleted successfully", "info")
     return redirect(url_for("admin.users"))
+
+
+@admin_bp.route("/orders/<int:order_id>/update-status", methods=["POST"])
+@roles_required("admin")
+def update_order_status(order_id):
+    """Admin can update overall order status"""
+    new_status = request.form.get("status")
+    user_id = session.get("user_id")
+    
+    if not new_status:
+        flash("Status is required.", "danger")
+        return redirect(url_for("admin.orders"))
+    
+    # Update main order status
+    execute_query(
+        "UPDATE orders SET order_status = %s WHERE order_id = %s",
+        (new_status, order_id)
+    )
+    
+    # Get order items for this order
+    order_items = fetch_all(
+        "SELECT order_item_id FROM order_items WHERE order_id = %s",
+        (order_id,)
+    )
+    
+    # Create tracking entries for each item
+    for item in order_items:
+        warehouse = fetch_one(
+            """
+            SELECT DISTINCT i.warehouse_location
+            FROM order_items oi
+            JOIN product p ON p.product_id = oi.product_id
+            JOIN inventory i ON i.product_id = p.product_id
+            WHERE oi.order_item_id = %s
+            """,
+            (item["order_item_id"],)
+        )
+        
+        execute_query(
+            """
+            INSERT INTO order_tracking (order_id, order_item_id, status, warehouse_location, notes, updated_by)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                order_id,
+                item["order_item_id"],
+                new_status,
+                warehouse["warehouse_location"] if warehouse else "Unknown",
+                request.form.get("notes", f"Status updated to {new_status}"),
+                user_id
+            )
+        )
+    
+    flash(f"Order status updated to {new_status}.", "success")
+    return redirect(url_for("admin.orders"))

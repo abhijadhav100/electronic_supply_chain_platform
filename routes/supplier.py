@@ -136,7 +136,7 @@ def orders():
     orders_data = fetch_all(
         """
         SELECT o.order_id, o.order_date, o.order_status, u.name AS customer_name,
-               pr.product_name, oi.quantity, oi.price
+               pr.product_name, oi.quantity, oi.price, oi.order_item_id
         FROM orders o
         JOIN "user" u ON u.user_id = o.user_id
         JOIN order_items oi ON oi.order_id = o.order_id
@@ -147,3 +147,62 @@ def orders():
         (supplier_id,),
     )
     return render_template("supplier/orders.html", orders=orders_data)
+
+
+@supplier_bp.route("/orders/<int:order_id>/items/<int:order_item_id>/update-status", methods=["POST"])
+@roles_required("supplier")
+def update_item_status(order_id, order_item_id):
+    """Supplier can update status only for their own products"""
+    supplier_id = session["supplier_id"]
+    new_status = request.form.get("status")
+    user_id = session.get("user_id")
+    
+    if not new_status:
+        flash("Status is required.", "danger")
+        return redirect(url_for("supplier.orders"))
+    
+    # Verify that this order item belongs to this supplier
+    order_item = fetch_one(
+        """
+        SELECT oi.order_item_id, p.supplier_id, oi.order_id
+        FROM order_items oi
+        JOIN product p ON p.product_id = oi.product_id
+        WHERE oi.order_item_id = %s AND p.supplier_id = %s
+        """,
+        (order_item_id, supplier_id)
+    )
+    
+    if not order_item:
+        flash("You do not have permission to update this item.", "danger")
+        return redirect(url_for("supplier.orders"))
+    
+    # Get warehouse location for this product
+    warehouse = fetch_one(
+        """
+        SELECT i.warehouse_location
+        FROM order_items oi
+        JOIN product p ON p.product_id = oi.product_id
+        JOIN inventory i ON i.product_id = p.product_id
+        WHERE oi.order_item_id = %s
+        """,
+        (order_item_id,)
+    )
+    
+    # Create tracking entry
+    execute_query(
+        """
+        INSERT INTO order_tracking (order_id, order_item_id, status, warehouse_location, notes, updated_by)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (
+            order_id,
+            order_item_id,
+            new_status,
+            warehouse["warehouse_location"] if warehouse else "Unknown",
+            request.form.get("notes", f"Status updated to {new_status}"),
+            user_id
+        )
+    )
+    
+    flash(f"Product status updated to {new_status}.", "success")
+    return redirect(url_for("supplier.orders"))

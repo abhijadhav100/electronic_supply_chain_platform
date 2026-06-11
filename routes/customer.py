@@ -273,3 +273,61 @@ def orders():
         grouped_items.setdefault(item["order_id"], []).append(item)
 
     return render_template("customer/orders.html", orders=orders_data, grouped_items=grouped_items)
+
+
+@customer_bp.route("/orders/<int:order_id>/track")
+@roles_required("customer")
+def track_order(order_id):
+    """View detailed order tracking information"""
+    user_id = session["user_id"]
+    
+    # Verify order belongs to this customer
+    order = fetch_one(
+        "SELECT * FROM orders WHERE order_id = %s AND user_id = %s",
+        (order_id, user_id)
+    )
+    
+    if not order:
+        flash("Order not found.", "danger")
+        return redirect(url_for("customer.orders"))
+    
+    # Get order items with product details
+    order_items = fetch_all(
+        """
+        SELECT oi.order_item_id, oi.product_id, pr.product_name, pr.brand, pr.image, oi.quantity, oi.price
+        FROM order_items oi
+        JOIN product pr ON pr.product_id = oi.product_id
+        WHERE oi.order_id = %s
+        """,
+        (order_id,)
+    )
+    
+    # Get tracking history for the order
+    tracking_history = fetch_all(
+        """
+        SELECT ot.tracking_id, ot.order_item_id, ot.status, ot.warehouse_location, 
+               ot.timestamp, ot.notes, pr.product_name, pr.brand
+        FROM order_tracking ot
+        LEFT JOIN order_items oi ON oi.order_item_id = ot.order_item_id
+        LEFT JOIN product pr ON pr.product_id = oi.product_id
+        WHERE ot.order_id = %s
+        ORDER BY ot.timestamp DESC
+        """,
+        (order_id,)
+    )
+    
+    # Group tracking by order_item_id for better display
+    tracking_by_item = {}
+    for track in tracking_history:
+        item_id = track["order_item_id"]
+        if item_id not in tracking_by_item:
+            tracking_by_item[item_id] = []
+        tracking_by_item[item_id].append(track)
+    
+    return render_template(
+        "customer/track_order.html",
+        order=order,
+        order_items=order_items,
+        tracking_history=tracking_history,
+        tracking_by_item=tracking_by_item
+    )
