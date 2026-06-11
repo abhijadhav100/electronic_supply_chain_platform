@@ -205,7 +205,6 @@ def delete_category(category_id):
     if product_count and product_count["total"] > 0:
         flash("Category cannot be deleted while products are assigned to it.", "warning")
         return redirect(url_for("admin.categories"))
-
     execute_query("DELETE FROM category WHERE category_id = %s", (category_id,))
     flash("Category deleted successfully.", "info")
     return redirect(url_for("admin.categories"))
@@ -217,9 +216,11 @@ def orders():
     orders_data = fetch_all(
         """
         SELECT o.order_id, o.order_date, o.total_amount, o.order_status, o.shipping_address,
-               u.name AS customer_name, u.email AS customer_email
+               u.name AS customer_name, u.email AS customer_email,
+               p.transaction_id
         FROM orders o
         JOIN "user" u ON u.user_id = o.user_id
+        LEFT JOIN payment p ON p.order_id = o.order_id
         ORDER BY o.order_date DESC
         """
     )
@@ -233,7 +234,17 @@ def orders():
         FROM orders
         """
     )
-    return render_template("admin/orders.html", orders=orders_data, report=report)
+    top_products = fetch_all(
+        """
+        SELECT p.product_id, p.product_name, p.brand, p.price, p.stock_quantity,
+               p.view_count, p.image, c.category_name
+        FROM product p
+        JOIN category c ON c.category_id = p.category_id
+        ORDER BY p.view_count DESC
+        LIMIT 10
+        """
+    )
+    return render_template("admin/orders.html", orders=orders_data, report=report, top_products=top_products)
 
 
 @admin_bp.route("/users")

@@ -1,4 +1,6 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+import uuid
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 
 from db import execute_query, fetch_all, fetch_one
 from decorators import roles_required
@@ -108,7 +110,7 @@ def cart():
     )
     totals = {
         "subtotal": sum(float(item["price"]) * int(item["quantity"]) for item in cart_items),
-        "total_items": sum(int(item["quantity"]) for item in cart_items),  # renamed from 'items'
+        "total_items": sum(int(item["quantity"]) for item in cart_items),
     }
     return render_template("customer/cart.html", cart_items=cart_items, totals=totals)
 
@@ -148,7 +150,7 @@ def remove_cart_item(cart_id):
     return redirect(url_for("customer.cart"))
 
 
-@customer_bp.route("/checkout", methods=["GET", "POST"])
+@customer_bp.route("/checkout", methods=["GET"])
 @roles_required("customer")
 def checkout():
     user_id = session["user_id"]
@@ -169,62 +171,74 @@ def checkout():
         return redirect(url_for("customer.cart"))
 
     subtotal = sum(float(item["price"]) * int(item["quantity"]) for item in cart_items)
-
-    if request.method == "POST":
-        shipping_address = request.form.get("shipping_address", "").strip()
-        payment_method = request.form.get("payment_method", "").strip()
-
-        if not shipping_address or not payment_method:
-            flash("Shipping address and payment method are required.", "danger")
-            return render_template("customer/checkout.html", cart_items=cart_items, subtotal=subtotal, user=user)
-
-        for item in cart_items:
-            if int(item["quantity"]) > int(item["stock_quantity"]):
-                flash(f"Insufficient stock for {item['product_name']}. Please review your cart.", "danger")
-                return redirect(url_for("customer.cart"))
-
-        order_id = execute_query(
-            """
-            INSERT INTO orders (user_id, total_amount, order_status, shipping_address)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (user_id, subtotal, "Processing", shipping_address),
-        )
-
-        for item in cart_items:
-            execute_query(
-                """
-                INSERT INTO order_items (order_id, product_id, quantity, price)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (order_id, item["product_id"], item["quantity"], item["price"]),
-            )
-            execute_query(
-                "UPDATE product SET stock_quantity = stock_quantity - %s WHERE product_id = %s",
-                (item["quantity"], item["product_id"]),
-            )
-            execute_query(
-                """
-                UPDATE inventory
-                SET stock_quantity = stock_quantity - %s, last_updated = CURRENT_TIMESTAMP
-                WHERE product_id = %s
-                """,
-                (item["quantity"], item["product_id"]),
-            )
-
-        execute_query(
-            """
-            INSERT INTO payment (order_id, payment_method, payment_status)
-            VALUES (%s, %s, %s)
-            """,
-            (order_id, payment_method, "Paid"),
-        )
-        execute_query("DELETE FROM cart WHERE user_id = %s", (user_id,))
-
-        flash(f"Order #{order_id} placed successfully and payment simulated.", "success")
-        return redirect(url_for("customer.orders"))
-
     return render_template("customer/checkout.html", cart_items=cart_items, subtotal=subtotal, user=user)
+
+
+@customer_bp.route("/checkout/process", methods=["POST"])
+@roles_required("customer")
+def process_payment():
+    """
+    AJAX endpoint called by the dummy payment modal after user 'pays'.
+    Creates order, items, updates stock, saves payment with transaction ID.
+    """
+    user_id = session["user_id"]
+    shipping_address = request.form.get("shipping_address", "").strip()
+    payment_method   = request.form.get("payment_method", "").strip()
+
+    if not shipping_address or not payment_method:
+        return jsonify({"success": False, "message": "Shipping address and payment method are required."})
+
+    cart_items = fetch_all(
+        """
+        SELECT c.quantity, p.product_id, p.product_name, p.price, p.stock_quantity
+        FROM cart c
+        JOIN product p ON p.product_id = c.product_id
+        WHERE c.user_id = %s
+        """,
+        (user_id,),
+    )
+
+    if not cart_items:
+        return jsonify({"success": False, "message": "Your cart is empty."})
+
+    for item in cart_items:
+        if int(item["quantity"]) > int(item["stock_quantity"]):
+            return jsonify({"success": False, "message": f"Insufficient stock for {item['product_name']}."})
+
+    subtotal = sum(float(item["price"]) * int(item["quantity"]) for item in cart_items)
+    transaction_id = "TXN-" + uuid.uuid4().hex[:12].upper()
+
+    order_id = execute_query(
+        "INSERT INTO orders (user_id, total_amount, order_status, shipping_address) VALUES (%s, %s, %s, %s)",
+        (user_id, subtotal, "Processing", shipping_address),
+    )
+
+    for item in cart_items:
+        execute_query(
+            "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (%s, %s, %s, %s)",
+            (order_id, item["product_id"], item["quantity"], item["price"]),
+        )
+        execute_query(
+            "UPDATE product SET stock_quantity = stock_quantity - %s WHERE product_id = %s",
+            (item["quantity"], item["product_id"]),
+        )
+        execute_query(
+            "UPDATE inventory SET stock_quantity = stock_quantity - %s, last_updated = CURRENT_TIMESTAMP WHERE product_id = %s",
+            (item["quantity"], item["product_id"]),
+        )
+
+    execute_query(
+        "INSERT INTO payment (order_id, payment_method, payment_status, transaction_id) VALUES (%s, %s, %s, %s)",
+        (order_id, payment_method, "Paid", transaction_id),
+    )
+    execute_query("DELETE FROM cart WHERE user_id = %s", (user_id,))
+
+    return jsonify({
+        "success": True,
+        "order_id": order_id,
+        "transaction_id": transaction_id,
+        "redirect": url_for("customer.orders")
+    })
 
 
 @customer_bp.route("/orders")
@@ -234,7 +248,7 @@ def orders():
     orders_data = fetch_all(
         """
         SELECT o.order_id, o.order_date, o.total_amount, o.order_status, o.shipping_address,
-               p.payment_method, p.payment_status
+               p.payment_method, p.payment_status, p.transaction_id
         FROM orders o
         LEFT JOIN payment p ON p.order_id = o.order_id
         WHERE o.user_id = %s

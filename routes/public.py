@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
-from db import fetch_all
+from db import execute_query, fetch_all, fetch_one
 
 public_bp = Blueprint("public", __name__)
 
@@ -36,8 +36,8 @@ def products():
     category_id = request.args.get("category", "").strip()
 
     query = """
-        SELECT p.product_id, p.product_name, p.brand, p.description, p.price, p.stock_quantity, p.image,
-               c.category_name, s.name AS supplier_name
+        SELECT p.product_id, p.product_name, p.brand, p.description, p.price, p.stock_quantity,
+               p.image, p.view_count, c.category_name, s.name AS supplier_name
         FROM product p
         JOIN category c ON c.category_id = p.category_id
         JOIN supplier s ON s.supplier_id = p.supplier_id
@@ -66,6 +66,29 @@ def products():
         selected_category=category_id,
         search_term=search_term,
     )
+
+
+@public_bp.route("/products/<int:product_id>")
+def product_detail(product_id):
+    # Increment view count every time product page is visited
+    execute_query(
+        "UPDATE product SET view_count = view_count + 1 WHERE product_id = %s",
+        (product_id,),
+    )
+    product = fetch_one(
+        """
+        SELECT p.*, c.category_name, s.name AS supplier_name
+        FROM product p
+        JOIN category c ON c.category_id = p.category_id
+        JOIN supplier s ON s.supplier_id = p.supplier_id
+        WHERE p.product_id = %s
+        """,
+        (product_id,),
+    )
+    if not product:
+        return redirect(url_for("public.products"))
+
+    return render_template("product_detail.html", product=product)
 
 
 @public_bp.route("/dashboard")

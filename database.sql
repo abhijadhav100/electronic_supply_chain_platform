@@ -64,6 +64,7 @@ CREATE TABLE product (
     description TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     stock_quantity INT NOT NULL DEFAULT 0,
+    view_count INT NOT NULL DEFAULT 0,
     image VARCHAR(255) DEFAULT '/static/images/product-default.svg',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES category(category_id),
@@ -135,6 +136,7 @@ CREATE TABLE payment (
     order_id INT NOT NULL,
     payment_method VARCHAR(60) NOT NULL,
     payment_status VARCHAR(40) NOT NULL DEFAULT 'Pending',
+    transaction_id VARCHAR(100),
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
@@ -168,13 +170,13 @@ INSERT INTO supplier (name, contact_person, phone, email, address) VALUES
 ('Volt Supply', 'Arjun Mehta', '9876500011', 'supplier@electrohub.com', 'No. 21, Electronic City, Bangalore'),
 ('NextGen Electronics', 'Priya Iyer', '9876500033', 'sales@nextgen.com', 'MIDC Industrial Hub, Pune');
 
-INSERT INTO product (category_id, supplier_id, product_name, brand, description, price, stock_quantity, image) VALUES
-(1, 1, 'TurboCharge 65W Adapter', 'Voltix', 'Fast charging GaN adapter for phones, tablets, and ultrabooks.', 2499.00, 42, '/static/images/charger.svg'),
-(2, 2, 'Mechanical RGB Keyboard', 'ClickForge', 'Compact wireless mechanical keyboard with multi-device support.', 4599.00, 28, '/static/images/keyboard.svg'),
-(1, 1, 'MagSafe Power Bank 10000mAh', 'Voltix', 'Slim magnetic power bank with USB-C fast recharge.', 3299.00, 35, '/static/images/powerbank.svg'),
-(3, 2, 'ActiveFit Smart Watch', 'PulseOne', 'AMOLED smartwatch with GPS, health insights, and 7-day battery.', 6999.00, 20, '/static/images/smartwatch.svg'),
-(4, 2, 'BassFlow Bluetooth Speaker', 'SonicArc', 'Portable speaker with deep bass, IPX6 protection, and 12-hour playback.', 3899.00, 18, '/static/images/speaker.svg'),
-(1, 1, 'Noise-Cancel Earbuds Pro', 'Voltix', 'ANC true wireless earbuds with quad microphones and low-latency mode.', 5499.00, 24, '/static/images/earbuds.svg');
+INSERT INTO product (category_id, supplier_id, product_name, brand, description, price, stock_quantity, view_count, image) VALUES
+(1, 1, 'TurboCharge 65W Adapter', 'Voltix', 'Fast charging GaN adapter for phones, tablets, and ultrabooks.', 2499.00, 42, 0, '/static/images/charger.svg'),
+(2, 2, 'Mechanical RGB Keyboard', 'ClickForge', 'Compact wireless mechanical keyboard with multi-device support.', 4599.00, 28, 0, '/static/images/keyboard.svg'),
+(1, 1, 'MagSafe Power Bank 10000mAh', 'Voltix', 'Slim magnetic power bank with USB-C fast recharge.', 3299.00, 35, 0, '/static/images/powerbank.svg'),
+(3, 2, 'ActiveFit Smart Watch', 'PulseOne', 'AMOLED smartwatch with GPS, health insights, and 7-day battery.', 6999.00, 20, 0, '/static/images/smartwatch.svg'),
+(4, 2, 'BassFlow Bluetooth Speaker', 'SonicArc', 'Portable speaker with deep bass, IPX6 protection, and 12-hour playback.', 3899.00, 18, 0, '/static/images/speaker.svg'),
+(1, 1, 'Noise-Cancel Earbuds Pro', 'Voltix', 'ANC true wireless earbuds with quad microphones and low-latency mode.', 5499.00, 24, 0, '/static/images/earbuds.svg');
 
 INSERT INTO inventory (product_id, warehouse_location, stock_quantity) VALUES
 (1, 'Bangalore WH-A1', 42),
@@ -193,9 +195,9 @@ INSERT INTO order_items (order_id, product_id, quantity, price) VALUES
 (1, 5, 1, 3899.00),
 (2, 1, 1, 2499.00);
 
-INSERT INTO payment (order_id, payment_method, payment_status) VALUES
-(1, 'UPI', 'Paid'),
-(2, 'Credit Card', 'Paid');
+INSERT INTO payment (order_id, payment_method, payment_status, transaction_id) VALUES
+(1, 'UPI', 'Paid', 'TXN-DEMO-001'),
+(2, 'Credit Card', 'Paid', 'TXN-DEMO-002');
 
 INSERT INTO return_refund (order_id, reason, status) VALUES
 (1, 'Requested replacement due to transit damage on speaker grill.', 'Under Review');

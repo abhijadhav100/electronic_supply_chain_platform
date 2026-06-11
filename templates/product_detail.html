@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ product.product_name }} | ElectroHub{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('public.home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('public.products') }}">Products</a></li>
+                <li class="breadcrumb-item active">{{ product.product_name }}</li>
+            </ol>
+        </nav>
+
+        <div class="row g-5">
+            <!-- Product Image -->
+            <div class="col-lg-5 text-center">
+                <div class="dashboard-panel p-4">
+                    <img src="{{ product.image }}" alt="{{ product.product_name }}"
+                         style="max-height:280px;object-fit:contain;width:100%;">
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="col-lg-7">
+                <span class="badge bg-light text-dark border mb-2">{{ product.category_name }}</span>
+                <h1 class="fw-bold mb-1">{{ product.product_name }}</h1>
+                <p class="text-muted mb-2">by <strong>{{ product.brand }}</strong> · Supplied by {{ product.supplier_name }}</p>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="fs-3 fw-bold">{{ product.price|currency }}</span>
+                    {% if product.stock_quantity > 0 %}
+                        <span class="badge bg-success">In Stock ({{ product.stock_quantity }} left)</span>
+                    {% else %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                    {% endif %}
+                    <span class="text-muted ms-auto" style="font-size:13px;">
+                        <i class="fa-solid fa-eye me-1"></i>{{ product.view_count }} views
+                    </span>
+                </div>
+
+                <p class="text-muted mb-4">{{ product.description }}</p>
+
+                {% if session.get("role") == "customer" and product.stock_quantity > 0 %}
+                <form method="post" action="{{ url_for('customer.add_to_cart', product_id=product.product_id) }}" class="d-flex gap-2 align-items-center">
+                    <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}"
+                           class="form-control" style="width:80px;">
+                    <button class="btn btn-dark rounded-pill px-4">
+                        <i class="fa-solid fa-cart-plus me-2"></i>Add to Cart
+                    </button>
+                </form>
+                {% elif not session.get("role") %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-dark rounded-pill px-4">
+                    Login to buy
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -6,21 +6,24 @@
         <div class="dashboard-header">
             <div>
                 <span class="section-label">Checkout</span>
-                <h1 class="fw-bold mb-1">Confirm shipping and simulate payment</h1>
-                <p class="text-muted mb-0">This checkout flow creates the order, items, payment record, and stock updates.</p>
+                <h1 class="fw-bold mb-1">Confirm your order</h1>
+                <p class="text-muted mb-0">Review your items, enter shipping details, and complete payment.</p>
             </div>
         </div>
+
         <div class="row g-4 mt-2">
+            <!-- Shipping & Payment Form -->
             <div class="col-lg-7">
                 <div class="dashboard-panel">
-                    <form method="post" class="row g-3">
+                    <h5 class="mb-3">Shipping Details</h5>
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Customer name</label>
                             <input type="text" class="form-control" value="{{ user.name }}" disabled>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Payment method</label>
-                            <select name="payment_method" class="form-select" required>
+                            <label class="form-label">Payment method <span class="text-danger">*</span></label>
+                            <select id="paymentMethodSelect" class="form-select" required>
                                 <option value="">Select method</option>
                                 <option value="UPI">UPI</option>
                                 <option value="Credit Card">Credit Card</option>
@@ -29,18 +32,22 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Shipping address</label>
-                            <textarea name="shipping_address" rows="4" class="form-control" required>{{ user.address }}</textarea>
+                            <label class="form-label">Shipping address <span class="text-danger">*</span></label>
+                            <textarea id="shippingAddress" rows="3" class="form-control" required>{{ user.address }}</textarea>
                         </div>
-                        <div class="col-12">
-                            <button class="btn btn-dark btn-lg rounded-pill px-4">Place order and pay</button>
+                        <div class="col-12 mt-2">
+                            <button type="button" onclick="openPaymentGateway()" class="btn btn-dark btn-lg rounded-pill px-5">
+                                Proceed to Pay &nbsp;→
+                            </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
+
+            <!-- Order Summary -->
             <div class="col-lg-5">
                 <div class="dashboard-panel">
-                    <h4 class="mb-3">Order items</h4>
+                    <h5 class="mb-3">Order Summary</h5>
                     <div class="stack-list">
                         {% for item in cart_items %}
                             <div class="summary-row">
@@ -50,13 +57,270 @@
                         {% endfor %}
                     </div>
                     <hr>
-                    <div class="summary-row total">
-                        <span>Total payable</span>
-                        <strong>{{ subtotal|currency }}</strong>
+                    <div class="summary-row">
+                        <span>Delivery</span>
+                        <strong class="text-success">Free</strong>
+                    </div>
+                    <div class="summary-row total mt-1">
+                        <span class="fw-bold">Total Payable</span>
+                        <strong class="fs-5">{{ subtotal|currency }}</strong>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════
+     DUMMY PAYMENT GATEWAY MODAL
+═══════════════════════════════════════════════ -->
+<div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+
+            <!-- Gateway Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-2" style="background: #0a0a0a;">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width:32px;height:32px;background:#f5c518;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                        <i class="fa-solid fa-bolt text-dark" style="font-size:14px;"></i>
+                    </div>
+                    <div>
+                        <div class="text-white fw-bold" style="font-size:15px;line-height:1.1;">ElectroHub Pay</div>
+                        <div class="text-secondary" style="font-size:11px;">Secure Payment Gateway</div>
+                    </div>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="text-secondary" style="font-size:11px;">Amount</div>
+                    <div class="text-white fw-bold" id="modalAmount">{{ subtotal|currency }}</div>
+                </div>
+            </div>
+
+            <!-- Method Tabs -->
+            <div class="px-4 pt-3" style="background:#0a0a0a;">
+                <div class="d-flex gap-2" id="methodTabs">
+                    <button class="pay-tab active" data-method="UPI" onclick="switchTab(this,'UPI')">UPI</button>
+                    <button class="pay-tab" data-method="Credit Card" onclick="switchTab(this,'Credit Card')">Card</button>
+                    <button class="pay-tab" data-method="Debit Card" onclick="switchTab(this,'Debit Card')">Debit</button>
+                    <button class="pay-tab" data-method="Cash on Delivery" onclick="switchTab(this,'Cash on Delivery')">COD</button>
+                </div>
+            </div>
+
+            <div class="modal-body px-4 pb-4" style="background:#fff;">
+
+                <!-- UPI Panel -->
+                <div class="pay-panel" id="panel-UPI">
+                    <label class="form-label mt-3 fw-semibold">UPI ID</label>
+                    <div class="input-group">
+                        <input type="text" id="upiId" class="form-control" placeholder="yourname@upi">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-check-circle text-success"></i></span>
+                    </div>
+                    <small class="text-muted">e.g. 9876543210@paytm, name@okaxis</small>
+                </div>
+
+                <!-- Credit / Debit Card Panel (shared) -->
+                <div class="pay-panel d-none" id="panel-Credit Card">
+                    <label class="form-label mt-3 fw-semibold">Card Number</label>
+                    <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+                    <div class="row g-2 mt-1">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Expiry</label>
+                            <input type="text" id="cardExpiry" class="form-control" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">CVV</label>
+                            <input type="password" id="cardCvv" class="form-control" placeholder="•••" maxlength="3">
+                        </div>
+                    </div>
+                    <label class="form-label mt-2 fw-semibold">Cardholder Name</label>
+                    <input type="text" id="cardName" class="form-control" placeholder="As on card">
+                </div>
+
+                <div class="pay-panel d-none" id="panel-Debit Card">
+                    <label class="form-label mt-3 fw-semibold">Card Number</label>
+                    <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+                    <div class="row g-2 mt-1">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Expiry</label>
+                            <input type="text" class="form-control" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">CVV</label>
+                            <input type="password" class="form-control" placeholder="•••" maxlength="3">
+                        </div>
+                    </div>
+                    <label class="form-label mt-2 fw-semibold">Cardholder Name</label>
+                    <input type="text" class="form-control" placeholder="As on card">
+                </div>
+
+                <!-- COD Panel -->
+                <div class="pay-panel d-none" id="panel-Cash on Delivery">
+                    <div class="text-center py-3">
+                        <i class="fa-solid fa-truck-fast fa-2x text-warning mb-2"></i>
+                        <p class="text-muted mb-0">Pay when your order is delivered.<br>No advance payment required.</p>
+                    </div>
+                </div>
+
+                <!-- Error message -->
+                <div id="payError" class="alert alert-danger mt-3 d-none py-2"></div>
+
+                <!-- Pay Button -->
+                <button id="payBtn" onclick="submitPayment()" class="btn btn-warning w-100 rounded-pill fw-bold mt-3 py-2" style="font-size:15px;">
+                    <span id="payBtnText">Pay {{ subtotal|currency }}</span>
+                    <span id="payBtnSpinner" class="d-none spinner-border spinner-border-sm ms-2"></span>
+                </button>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-lock me-1"></i>256-bit SSL secured · Demo environment
+                    </small>
+                </div>
+            </div>
+
+            <!-- Success Screen (hidden by default) -->
+            <div id="paySuccess" class="d-none text-center px-4 py-5" style="background:#fff;">
+                <div class="success-circle mx-auto mb-3">
+                    <i class="fa-solid fa-check fa-2x text-white"></i>
+                </div>
+                <h5 class="fw-bold text-success">Payment Successful!</h5>
+                <p class="text-muted mb-1">Your order has been placed.</p>
+                <p class="text-muted" style="font-size:12px;">Transaction ID: <strong id="txnIdDisplay"></strong></p>
+                <p class="text-muted" style="font-size:12px;">Order ID: <strong id="orderIdDisplay"></strong></p>
+                <div class="spinner-border text-warning mt-2" style="width:1.2rem;height:1.2rem;" role="status"></div>
+                <p class="text-muted mt-2" style="font-size:12px;">Redirecting to your orders…</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Styles ═══ -->
+<style>
+.pay-tab {
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    border-radius: 6px 6px 0 0;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+}
+.pay-tab.active {
+    background: #fff;
+    border-color: #fff;
+    color: #000;
+    font-weight: 600;
+}
+.success-circle {
+    width: 64px; height: 64px;
+    background: #28a745;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+</style>
+
+<!-- ═══ Scripts ═══ -->
+<script>
+let selectedMethod = "UPI";
+
+function openPaymentGateway() {
+    const address = document.getElementById("shippingAddress").value.trim();
+    const method  = document.getElementById("paymentMethodSelect").value;
+
+    if (!address) {
+        alert("Please enter a shipping address.");
+        document.getElementById("shippingAddress").focus();
+        return;
+    }
+    if (!method) {
+        alert("Please select a payment method.");
+        document.getElementById("paymentMethodSelect").focus();
+        return;
+    }
+
+    // Sync modal tab with dropdown selection
+    selectedMethod = method;
+    document.querySelectorAll(".pay-tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.method === method);
+    });
+    document.querySelectorAll(".pay-panel").forEach(p => p.classList.add("d-none"));
+    const panel = document.getElementById("panel-" + method);
+    if (panel) panel.classList.remove("d-none");
+
+    new bootstrap.Modal(document.getElementById("paymentModal")).show();
+}
+
+function switchTab(btn, method) {
+    selectedMethod = method;
+    document.querySelectorAll(".pay-tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".pay-panel").forEach(p => p.classList.add("d-none"));
+    document.getElementById("panel-" + method).classList.remove("d-none");
+    // Also update the dropdown
+    document.getElementById("paymentMethodSelect").value = method;
+}
+
+function formatCard(input) {
+    let val = input.value.replace(/\D/g, "").substring(0, 16);
+    input.value = val.replace(/(.{4})/g, "$1 ").trim();
+}
+
+function formatExpiry(input) {
+    let val = input.value.replace(/\D/g, "").substring(0, 4);
+    if (val.length >= 3) val = val.substring(0,2) + " / " + val.substring(2);
+    input.value = val;
+}
+
+function submitPayment() {
+    const payBtn      = document.getElementById("payBtn");
+    const payBtnText  = document.getElementById("payBtnText");
+    const spinner     = document.getElementById("payBtnSpinner");
+    const errorBox    = document.getElementById("payError");
+
+    errorBox.classList.add("d-none");
+    payBtn.disabled = true;
+    payBtnText.textContent = "Processing…";
+    spinner.classList.remove("d-none");
+
+    // Simulate gateway processing delay (1.5s)
+    setTimeout(() => {
+        const formData = new FormData();
+        formData.append("shipping_address", document.getElementById("shippingAddress").value.trim());
+        formData.append("payment_method", selectedMethod);
+
+        fetch("{{ url_for('customer.process_payment') }}", {
+            method: "POST",
+            body: formData,
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(res => res.json())
+        .then(data => {
+            spinner.classList.add("d-none");
+            if (data.success) {
+                // Show success screen
+                document.querySelector(".modal-body").classList.add("d-none");
+                document.querySelector(".modal-header").classList.add("d-none");
+                document.querySelectorAll(".px-4.pt-3").forEach(el => el.classList.add("d-none"));
+                document.getElementById("paySuccess").classList.remove("d-none");
+                document.getElementById("txnIdDisplay").textContent  = data.transaction_id;
+                document.getElementById("orderIdDisplay").textContent = "#" + data.order_id;
+                // Redirect after 2.5s
+                setTimeout(() => { window.location.href = data.redirect; }, 2500);
+            } else {
+                payBtn.disabled = false;
+                payBtnText.textContent = "Pay {{ subtotal|currency }}";
+                errorBox.textContent = data.message;
+                errorBox.classList.remove("d-none");
+            }
+        })
+        .catch(() => {
+            spinner.classList.add("d-none");
+            payBtn.disabled = false;
+            payBtnText.textContent = "Pay {{ subtotal|currency }}";
+            errorBox.textContent = "Something went wrong. Please try again.";
+            errorBox.classList.remove("d-none");
+        });
+    }, 1500);
+}
+</script>
 {% endblock %}
